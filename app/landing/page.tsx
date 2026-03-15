@@ -1,15 +1,8 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { auth } from "@/app/(auth)/auth";
+
+export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
-  const session = await auth();
-
-  // If user is already logged in, redirect to the chat
-  if (session?.user) {
-    redirect("/");
-  }
-
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#0a0a0f] text-white">
       {/* Ambient background glow */}
