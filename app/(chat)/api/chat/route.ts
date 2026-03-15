@@ -13,12 +13,11 @@ import { createResumableStreamContext } from "resumable-stream";
 import { auth, type UserType } from "@/app/(auth)/auth";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { allowedModelIds } from "@/lib/ai/models";
-import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
+import { type RequestHints } from "@/lib/ai/prompts";
+import { companionPrompt } from "@/lib/ai/companionPrompt";
 import { getLanguageModel } from "@/lib/ai/providers";
-import { createDocument } from "@/lib/ai/tools/create-document";
-import { getWeather } from "@/lib/ai/tools/get-weather";
-import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
-import { updateDocument } from "@/lib/ai/tools/update-document";
+import { searchMemories } from "@/lib/memory/searchMemories";
+import { extractAndStoreMemories } from "@/lib/memory/extractMemory";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
@@ -143,6 +142,16 @@ export async function POST(request: Request) {
       });
     }
 
+    // MEMORY INTEGRATION: Fetch relevant memories
+    const relevantMemories = await searchMemories({
+      userId: session.user.id,
+      query: message?.role === "user" ? (message.parts[0] as any).text : "",
+    });
+
+    const memorySnippet = relevantMemories.length > 0
+      ? `\n\nRelevant memories about user:\n${relevantMemories.map(m => `* ${m.content}`).join("\n")}`
+      : "";
+
     const isReasoningModel =
       selectedChatModel.endsWith("-thinking") ||
       (selectedChatModel.includes("reasoning") &&
@@ -155,30 +164,8 @@ export async function POST(request: Request) {
       execute: async ({ writer: dataStream }) => {
         const result = streamText({
           model: getLanguageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+          system: companionPrompt + memorySnippet,
           messages: modelMessages,
-          stopWhen: stepCountIs(5),
-          experimental_activeTools: isReasoningModel
-            ? []
-            : [
-                "getWeather",
-                "createDocument",
-                "updateDocument",
-                "requestSuggestions",
-              ],
-          providerOptions: isReasoningModel
-            ? {
-                anthropic: {
-                  thinking: { type: "enabled", budgetTokens: 10_000 },
-                },
-              }
-            : undefined,
-          tools: {
-            getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({ session, dataStream }),
-          },
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
             functionId: "stream-text",
@@ -230,6 +217,18 @@ export async function POST(request: Request) {
               attachments: [],
               chatId: id,
             })),
+          });
+
+          // MEMORY INTEGRATION: Extract and store memories from the new exchange
+          after(async () => {
+            const lastMessages = [
+              ...(message ? [{ role: "user", content: (message.parts[0] as any).text }] : []),
+              ...finishedMessages.map(m => ({ role: m.role, content: (m.parts[0] as any).text }))
+            ];
+            await extractAndStoreMemories({
+              userId: session.user.id,
+              messages: lastMessages,
+            });
           });
         }
       },

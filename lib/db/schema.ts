@@ -168,3 +168,15 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+export const memories = pgTable("Memory", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  content: text("content").notNull(),
+  embedding: json("embedding").notNull(), // Storing as JSON array for compatibility
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type Memory = InferSelectModel<typeof memories>;
