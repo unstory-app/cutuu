@@ -149,7 +149,7 @@ export async function POST(request: Request) {
     });
 
     const memorySnippet = relevantMemories.length > 0
-      ? `\n\nRelevant memories about user:\n${relevantMemories.map(m => `* ${m.content}`).join("\n")}`
+      ? `\n\nRelevant memories about user:\n${relevantMemories.map(m => `* ${m}`).join("\n")}`
       : "";
 
     const isReasoningModel =

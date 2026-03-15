@@ -77,7 +77,7 @@ cutuu/
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/cutuu.git
+git clone https://github.com/unstory-app/cutuu.git
 cd cutuu
 pnpm install
 ```

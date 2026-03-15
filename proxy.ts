@@ -1,6 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
-import { guestRegex, isDevelopmentEnvironment } from "./lib/constants";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -17,26 +15,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-    secureCookie: !isDevelopmentEnvironment,
-  });
+  /*
+   * Auth logic is handled by Stack Auth in the layout and pages.
+   * This proxy can still handle specific redirects if needed,
+   * but we should avoid using process.env.AUTH_SECRET.
+   */
 
-  if (!token) {
-    const redirectUrl = encodeURIComponent(request.url);
-
-    return NextResponse.redirect(
-      new URL(`/api/auth/guest?redirectUrl=${redirectUrl}`, request.url)
-    );
+  if (["/login", "/register", "/landing"].includes(pathname)) {
+    return NextResponse.next();
   }
 
-  const isGuest = guestRegex.test(token?.email ?? "");
-
-  if (token && !isGuest && ["/login", "/register"].includes(pathname)) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
+  // Basic check: if not a protected route and not logged in, pages will handle redirect.
+  // For API routes, they check for the user session internally.
+  
   return NextResponse.next();
 }
 

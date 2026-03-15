@@ -225,19 +225,6 @@ export default async function LandingPage() {
         </div>
       </footer>
 
-      <style jsx global>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-fade-in { animation: fade-in 1s ease-out forwards; }
-        .animate-float { animation: float 4s ease-in-out infinite; }
-        .animate-float-delayed { animation: float 4s ease-in-out 2s infinite; }
-      `}</style>
     </div>
   );
 }
