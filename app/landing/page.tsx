@@ -29,9 +29,9 @@ export default function LandingPage() {
           <div className="flex items-center gap-6">
             {!user ? (
               <>
-                <Link href="/handler/sign-in" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Login</Link>
+                <Link href="/login" className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors">Login</Link>
                 <Button asChild size="lg" className="rounded-3xl px-8 shadow-xl shadow-primary/20 hover:scale-105 transition-all">
-                  <Link href="/handler/sign-up">Start Talking</Link>
+                  <Link href="/register">Start Talking</Link>
                 </Button>
               </>
             ) : (
@@ -208,7 +208,7 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-col items-center gap-12">
               <Button asChild size="xl" className="h-20 px-12 text-2xl font-black rounded-5xl shadow-3xl shadow-primary/30 group">
-                <Link href="/handler/sign-up">
+                <Link href="/register">
                   Start Chatting for Free <ArrowRight size={24} className="ml-3 group-hover:translate-x-2 transition-transform" />
                 </Link>
               </Button>
