@@ -68,7 +68,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased">
+      <body className="antialiased bg-background">
         <StackProvider app={stackServerApp}>
           <StackTheme>
             <ThemeProvider

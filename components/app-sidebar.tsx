@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { User } from "next-auth";
+import { useUser } from "@stackframe/stack";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { PlusIcon, TrashIcon } from "@/components/icons";
+import { Smile } from "lucide-react";
 import {
   getChatHistoryPaginationKey,
   SidebarHistory,
@@ -34,8 +35,9 @@ import {
 } from "./ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-export function AppSidebar({ user }: { user: User | undefined }) {
+export function AppSidebar() {
   const router = useRouter();
+  const user = useUser();
   const { setOpenMobile } = useSidebar();
   const { mutate } = useSWRConfig();
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
@@ -60,19 +62,22 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 
   return (
     <>
-      <Sidebar className="group-data-[side=left]:border-r-0">
-        <SidebarHeader>
+      <Sidebar className="group-data-[side=left]:border-r-0 bg-sidebar">
+        <SidebarHeader className="p-4">
           <SidebarMenu>
             <div className="flex flex-row items-center justify-between">
               <Link
-                className="flex flex-row items-center gap-3"
+                className="flex flex-row items-center gap-3 group"
                 href="/"
                 onClick={() => {
                   setOpenMobile(false);
                 }}
               >
-                <span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted">
-                  Chatbot
+                <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
+                  <Smile size={20} className="text-primary-foreground" />
+                </div>
+                <span className="font-bold text-xl tracking-tight text-foreground underline-offset-4 group-hover:underline">
+                  cutuu
                 </span>
               </Link>
               <div className="flex flex-row gap-1">
@@ -80,23 +85,23 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        className="h-8 p-1 md:h-fit md:p-2"
+                        className="h-9 w-9 p-0 rounded-xl"
                         onClick={() => setShowDeleteAllDialog(true)}
                         type="button"
                         variant="ghost"
                       >
-                        <TrashIcon />
+                        <TrashIcon className="opacity-50" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent align="end" className="hidden md:block">
-                      Delete All Chats
+                    <TooltipContent align="end" className="rounded-xl font-medium">
+                      Delete All
                     </TooltipContent>
                   </Tooltip>
                 )}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      className="h-8 p-1 md:h-fit md:p-2"
+                      className="h-9 w-9 p-0 rounded-xl bg-secondary/50 text-secondary-foreground hover:bg-secondary shadow-sm"
                       onClick={() => {
                         setOpenMobile(false);
                         router.push("/");
@@ -108,7 +113,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                       <PlusIcon />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent align="end" className="hidden md:block">
+                  <TooltipContent align="end" className="rounded-xl font-medium">
                     New Chat
                   </TooltipContent>
                 </Tooltip>
@@ -117,26 +122,28 @@ export function AppSidebar({ user }: { user: User | undefined }) {
           </SidebarMenu>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarHistory user={user} />
+          <SidebarHistory />
         </SidebarContent>
-        <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
+        <SidebarFooter className="p-4">
+          <SidebarUserNav />
+        </SidebarFooter>
       </Sidebar>
 
       <AlertDialog
         onOpenChange={setShowDeleteAllDialog}
         open={showDeleteAllDialog}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-4xl border-none shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete all chats?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-2xl font-black">Delete all chats?</AlertDialogTitle>
+            <AlertDialogDescription className="font-medium">
               This action cannot be undone. This will permanently delete all
               your chats and remove them from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteAll}>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-2xl font-bold">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAll} className="rounded-2xl bg-destructive hover:bg-destructive/90 font-bold">
               Delete All
             </AlertDialogAction>
           </AlertDialogFooter>

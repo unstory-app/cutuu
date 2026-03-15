@@ -1,25 +1,17 @@
-import Form from "next/form";
+"use client";
 
-import { signOut } from "@/app/(auth)/auth";
+import { useStackApp } from "@stackframe/stack";
 
 export const SignOutForm = () => {
+  const stack = useStackApp();
+  
   return (
-    <Form
-      action={async () => {
-        "use server";
-
-        await signOut({
-          redirectTo: "/",
-        });
-      }}
-      className="w-full"
+    <button
+      className="w-full px-1 py-0.5 text-left text-red-500"
+      onClick={() => stack.signOut()}
+      type="button"
     >
-      <button
-        className="w-full px-1 py-0.5 text-left text-red-500"
-        type="submit"
-      >
-        Sign out
-      </button>
-    </Form>
+      Sign out
+    </button>
   );
 };

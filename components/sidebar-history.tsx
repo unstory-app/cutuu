@@ -3,10 +3,11 @@
 import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
-import type { User } from "next-auth";
 import { useState } from "react";
 import { toast } from "sonner";
 import useSWRInfinite from "swr/infinite";
+import { useUser } from "@stackframe/stack";
+import { Smile } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,7 +98,8 @@ export function getChatHistoryPaginationKey(
   return `/api/history?ending_before=${firstChatFromPage.id}&limit=${PAGE_SIZE}`;
 }
 
-export function SidebarHistory({ user }: { user: User | undefined }) {
+export function SidebarHistory() {
+  const user = useUser();
   const { setOpenMobile } = useSidebar();
   const pathname = usePathname();
   const id = pathname?.startsWith("/chat/") ? pathname.split("/")[2] : null;
@@ -163,8 +165,13 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     return (
       <SidebarGroup>
         <SidebarGroupContent>
-          <div className="flex w-full flex-row items-center justify-center gap-2 px-2 text-sm text-zinc-500">
-            Login to save and revisit previous chats!
+          <div className="flex w-full flex-col items-center justify-center gap-4 px-4 py-8 text-center animate-in fade-in zoom-in">
+            <div className="w-16 h-16 rounded-3xl bg-secondary/50 flex items-center justify-center text-secondary-foreground shadow-inner">
+               <Smile size={32} />
+            </div>
+            <p className="text-sm font-bold text-muted-foreground leading-relaxed">
+              Login to save and revisit your memories with Cutuu!
+            </p>
           </div>
         </SidebarGroupContent>
       </SidebarGroup>
