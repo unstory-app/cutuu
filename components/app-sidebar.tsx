@@ -90,7 +90,7 @@ export function AppSidebar() {
                         type="button"
                         variant="ghost"
                       >
-                        <TrashIcon className="opacity-50" />
+                        <TrashIcon size={16} />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent align="end" className="rounded-xl font-medium">
