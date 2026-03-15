@@ -1,18 +1,18 @@
-import { auth } from "@/app/(auth)/auth";
+import { stackServerApp } from "@/stack/server";
 import { getMessagesByChatId, getChatsByUserId } from "@/lib/db/queries";
 import { extractAndStoreMemories } from "@/lib/memory/extractMemory";
 import { ChatbotError } from "@/lib/errors";
 
 export async function POST(request: Request) {
-  const session = await auth();
+  const user = await stackServerApp.getUser();
 
-  if (!session?.user) {
+  if (!user) {
     return new ChatbotError("unauthorized:api").toResponse();
   }
 
   try {
     const { chats } = await getChatsByUserId({
-      id: session.user.id,
+      id: user.id,
       limit: 5,
       startingAfter: null,
       endingBefore: null,
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
     // This extracts key themes and events from the last 5 chats and stores them as memories
     await extractAndStoreMemories({
-      userId: session.user.id,
+      userId: user.id,
       messages: allMessages,
     });
 

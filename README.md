@@ -2,7 +2,7 @@
   <h1>✦ cutuu</h1>
   <p><strong>Your memory-first daily companion.</strong></p>
   <p>
-    <a href="https://cutuu.vercel.app">Live App</a> ·
+    <a href="https://cutuu.unstory.app">Live App</a> ·
     <a href="#features">Features</a> ·
     <a href="#setup">Setup</a> ·
     <a href="#architecture">Architecture</a>
@@ -29,7 +29,8 @@ That's the goal.
 | 💬 **Warm Companion AI** | Talks like a thoughtful friend — no bullet lists, no robotic tone |
 | 📓 **Daily Reflection** | "Reflect Today" button summarizes recent chats and stores key themes |
 | 🗂️ **Memory Timeline** | Visual timeline of everything the AI remembers about you |
-| 🔐 **Private by default** | All conversations and memories are authenticated and user-scoped |
+| 🔐 **Stack Auth Integration** | Secure, managed authentication with project-specific credentials |
+| 🌚 **Deep Dark Design** | Premium "glassmorphism" aesthetic tailored for late-night reflection |
 
 ---
 
@@ -39,7 +40,7 @@ That's the goal.
 cutuu/
 ├── app/
 │   ├── (chat)/           # Chat UI + memory timeline page
-│   ├── (auth)/           # Authentication
+│   ├── handler/          # Stack Auth handler routes
 │   ├── landing/          # Public landing page
 │   └── api/
 │       ├── reflect/      # Reflection API (summarizes recent chats)
@@ -56,22 +57,9 @@ cutuu/
 │   └── db/
 │       ├── schema.ts           # Drizzle schema (incl. Memory table)
 │       └── queries.ts          # Database query helpers
-```
-
-### Memory Flow
-
-```
-User Message
-     │
-     ▼
-1. Generate embedding for message
-2. Search top-5 relevant memories
-3. Inject memories into system prompt
-4. Stream AI response
-     │
-     ▼ (after response)
-5. Extract new facts via LLM
-6. Save new memories with embeddings
+├── stack/
+│   ├── server.ts         # Stack Auth Server Config
+│   └── client.ts         # Stack Auth Client Config
 ```
 
 ---
@@ -82,7 +70,8 @@ User Message
 
 - Node.js 20+
 - pnpm
-- Supabase project (for PostgreSQL + auth)
+- Supabase project (for PostgreSQL)
+- Stack Auth Project ID & Secret Key
 - Vercel AI Gateway API key
 
 ### 1. Clone and install
@@ -98,7 +87,9 @@ pnpm install
 Copy `.env.example` to `.env` and fill in your values:
 
 ```env
-AUTH_SECRET=<generate with: openssl rand -base64 32>
+# Stack Auth
+NEXT_PUBLIC_STACK_PROJECT_ID=8272a8b1-b06a-493e-8f96-af8726fb5ed7
+STACK_SECRET_SERVER_KEY=ssk_...
 
 # Vercel AI Gateway
 AI_GATEWAY_API_KEY=****
@@ -124,36 +115,15 @@ Visit `http://localhost:3000`.
 
 ---
 
-## AI Models
-
-Cutuu uses the **Vercel AI Gateway** and supports:
-
-| Model | Provider |
-|---|---|
-| GPT-4.1 Mini | OpenAI (default) |
-| GPT-5 Mini | OpenAI |
-| Claude Haiku 4.5 | Anthropic |
-| Gemini 2.5 Flash Lite | Google |
-| Grok 4.1 Fast | xAI |
-
-Embeddings are generated with `text-embedding-3-small` via OpenAI.
-
----
-
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
 - **AI**: Vercel AI SDK 6.x
 - **Database**: PostgreSQL via Supabase + Drizzle ORM
-- **Auth**: NextAuth 5
+- **Auth**: [Stack Auth](https://stack-auth.com/)
 - **Styling**: Tailwind CSS v4
+- **Icons**: Lucide React
 - **Deployment**: Vercel
-
----
-
-## Contributing
-
-PRs are welcome. Please open an issue first to discuss major changes.
 
 ---
 

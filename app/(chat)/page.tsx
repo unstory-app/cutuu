@@ -5,6 +5,9 @@ import { DataStreamHandler } from "@/components/data-stream-handler";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import { generateUUID } from "@/lib/utils";
 
+import { stackServerApp } from "@/stack/server";
+import { redirect } from "next/navigation";
+
 export default function Page() {
   return (
     <Suspense fallback={<div className="flex h-dvh" />}>
@@ -14,6 +17,12 @@ export default function Page() {
 }
 
 async function NewChatPage() {
+  const user = await stackServerApp.getUser();
+
+  if (!user) {
+    redirect("/landing");
+  }
+
   const cookieStore = await cookies();
   const modelIdFromCookie = cookieStore.get("chat-model");
   const id = generateUUID();

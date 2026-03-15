@@ -10,7 +10,7 @@ import {
 import { checkBotId } from "botid/server";
 import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream";
-import { auth, type UserType } from "@/app/(auth)/auth";
+import { stackServerApp } from "@/stack/server";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { allowedModelIds } from "@/lib/ai/models";
 import { type RequestHints } from "@/lib/ai/prompts";
@@ -64,13 +64,13 @@ export async function POST(request: Request) {
     const { id, message, messages, selectedChatModel, selectedVisibilityType } =
       requestBody;
 
-    const [botResult, session] = await Promise.all([checkBotId(), auth()]);
+    const [botResult, user] = await Promise.all([checkBotId(), stackServerApp.getUser()]);
 
     if (botResult.isBot) {
       return new ChatbotError("unauthorized:chat").toResponse();
     }
 
-    if (!session?.user) {
+    if (!user) {
       return new ChatbotError("unauthorized:chat").toResponse();
     }
 
@@ -80,10 +80,10 @@ export async function POST(request: Request) {
 
     await checkIpRateLimit(ipAddress(request));
 
-    const userType: UserType = session.user.type;
+    const userType = "regular"; // Default for Stack Auth users for now
 
     const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
+      id: user.id,
       differenceInHours: 1,
     });
 
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
     let titlePromise: Promise<string> | null = null;
 
     if (chat) {
-      if (chat.userId !== session.user.id) {
+      if (chat.userId !== user.id) {
         return new ChatbotError("forbidden:chat").toResponse();
       }
       if (!isToolApprovalFlow) {
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
     } else if (message?.role === "user") {
       await saveChat({
         id,
-        userId: session.user.id,
+        userId: user.id,
         title: "New chat",
         visibility: selectedVisibilityType,
       });
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
 
     // MEMORY INTEGRATION: Fetch relevant memories
     const relevantMemories = await searchMemories({
-      userId: session.user.id,
+      userId: user.id,
       query: message?.role === "user" ? (message.parts[0] as any).text : "",
     });
 
@@ -226,7 +226,7 @@ export async function POST(request: Request) {
               ...finishedMessages.map(m => ({ role: m.role, content: (m.parts[0] as any).text }))
             ];
             await extractAndStoreMemories({
-              userId: session.user.id,
+              userId: user.id,
               messages: lastMessages,
             });
           });
@@ -295,15 +295,13 @@ export async function DELETE(request: Request) {
     return new ChatbotError("bad_request:api").toResponse();
   }
 
-  const session = await auth();
-
-  if (!session?.user) {
+  const user = await stackServerApp.getUser();
+  if (!user) {
     return new ChatbotError("unauthorized:chat").toResponse();
   }
 
   const chat = await getChatById({ id });
-
-  if (chat?.userId !== session.user.id) {
+  if (chat?.userId !== user.id) {
     return new ChatbotError("forbidden:chat").toResponse();
   }
 
