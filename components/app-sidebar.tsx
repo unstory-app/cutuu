@@ -42,113 +42,96 @@ export function AppSidebar() {
   const { mutate } = useSWRConfig();
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
 
-  const handleDeleteAll = () => {
-    const deletePromise = fetch("/api/history", {
-      method: "DELETE",
-    });
-
-    toast.promise(deletePromise, {
-      loading: "Deleting all chats...",
-      success: () => {
-        mutate(unstable_serialize(getChatHistoryPaginationKey));
-        setShowDeleteAllDialog(false);
-        router.replace("/");
-        router.refresh();
-        return "All chats deleted successfully";
-      },
-      error: "Failed to delete all chats",
-    });
-  };
 
   return (
-    <>
-      <Sidebar className="group-data-[side=left]:border-r-0 bg-sidebar">
-        <SidebarHeader className="p-4">
-          <SidebarMenu>
-            <div className="flex flex-row items-center justify-between">
-              <Link
-                className="flex flex-row items-center gap-3 group"
-                href="/"
-                onClick={() => {
-                  setOpenMobile(false);
-                }}
-              >
-                <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
-                  <Smile size={20} className="text-primary-foreground" />
-                </div>
-                <span className="font-bold text-xl tracking-tight text-foreground underline-offset-4 group-hover:underline">
-                  cutuu
-                </span>
-              </Link>
-              <div className="flex flex-row gap-1">
-                {user && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        className="h-9 w-9 p-0 rounded-xl"
-                        onClick={() => setShowDeleteAllDialog(true)}
-                        type="button"
-                        variant="ghost"
-                      >
-                        <TrashIcon size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent align="end" className="rounded-xl font-medium">
-                      Delete All
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      className="h-9 w-9 p-0 rounded-xl bg-secondary/50 text-secondary-foreground hover:bg-secondary shadow-sm"
-                      onClick={() => {
-                        setOpenMobile(false);
-                        router.push("/");
-                        router.refresh();
-                      }}
-                      type="button"
-                      variant="ghost"
-                    >
-                      <PlusIcon />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent align="end" className="rounded-xl font-medium">
-                    New Chat
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          </SidebarMenu>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarHistory />
-        </SidebarContent>
-        <SidebarFooter className="p-4">
-          <SidebarUserNav />
-        </SidebarFooter>
-      </Sidebar>
+    <Sidebar className="group-data-[side=left]:border-r-0 bg-transparent" variant="inset">
+      <SidebarHeader className="p-4 flex items-center justify-center">
+        <Link
+          href="/"
+          onClick={() => setOpenMobile(false)}
+          className="flex items-center justify-center w-12 h-12 rounded-2xl glass shadow-soft transition-transform hover:scale-105 active:scale-95"
+        >
+          <Smile size={24} className="text-primary" />
+        </Link>
+      </SidebarHeader>
 
-      <AlertDialog
-        onOpenChange={setShowDeleteAllDialog}
-        open={showDeleteAllDialog}
-      >
-        <AlertDialogContent className="rounded-4xl border-none shadow-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-black">Delete all chats?</AlertDialogTitle>
-            <AlertDialogDescription className="font-medium">
-              This action cannot be undone. This will permanently delete all
-              your chats and remove them from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel className="rounded-2xl font-bold">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteAll} className="rounded-2xl bg-destructive hover:bg-destructive/90 font-bold">
-              Delete All
-            </AlertDialogAction>
-          </AlertDialogFooter>
+      <SidebarContent className="flex flex-col items-center gap-4 py-4 px-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-12 h-12 rounded-2xl glass shadow-soft hover:bg-white/50"
+              onClick={() => router.push("/")}
+            >
+              <PlusIcon size={20} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">New Chat</TooltipContent>
+        </Tooltip>
+
+        <SidebarHistory />
+      </SidebarContent>
+
+      <SidebarFooter className="p-4 flex flex-col items-center gap-4">
+        {user && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-12 h-12 rounded-2xl glass shadow-soft hover:bg-white/50 text-destructive"
+                onClick={() => setShowDeleteAllDialog(true)}
+              >
+                <TrashIcon size={18} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Delete All</TooltipContent>
+          </Tooltip>
+        )}
+        <SidebarUserNav />
+      </SidebarFooter>
+
+      <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+        <AlertDialogContent className="rounded-3xl border-0 glass overflow-hidden p-0">
+          <div className="p-8 space-y-4">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-2xl font-bold">Clear all memories?</AlertDialogTitle>
+              <AlertDialogDescription className="text-base text-muted-foreground">
+                This will permanently delete all your chat history and saved memories. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-3 pt-4">
+              <AlertDialogCancel className="rounded-2xl border-0 bg-secondary/50 hover:bg-secondary h-12 px-6 font-semibold">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async () => {
+                  const deletePromise = fetch("/api/history", { method: "DELETE" });
+                  toast.promise(deletePromise, {
+                    loading: "Deleting history...",
+                    success: () => {
+                      mutate(
+                        (key) =>
+                          Array.isArray(key) && key[0] === "api/history",
+                        undefined,
+                        { revalidate: false }
+                      );
+                      setShowDeleteAllDialog(false);
+                      router.push("/");
+                      return "History cleared successfully";
+                    },
+                    error: "Failed to delete history",
+                  });
+                }}
+                className="rounded-2xl bg-destructive text-destructive-foreground hover:bg-destructive/90 h-12 px-6 font-semibold"
+              >
+                Delete Everything
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </Sidebar>
   );
 }

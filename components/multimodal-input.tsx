@@ -317,7 +317,7 @@ function PureMultimodalInput({
       />
 
       <PromptInput
-        className="rounded-xl border border-border bg-background p-3 shadow-xs transition-all duration-200 focus-within:border-border hover:border-muted-foreground/50"
+        className="rounded-[2.5rem] glass shadow-float p-2 pr-4 transition-all duration-300 focus-within:shadow-primary/20 hover:border-primary/30"
         onSubmit={(event) => {
           event.preventDefault();
           if (!input.trim() && attachments.length === 0) {
