@@ -23,9 +23,7 @@ export const chat = pgTable("Chat", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   createdAt: timestamp("createdAt").notNull(),
   title: text("title").notNull(),
-  userId: uuid("userId")
-    .notNull()
-    .references(() => user.id),
+  userId: varchar("userId", { length: 255 }).notNull(),
   visibility: varchar("visibility", { enum: ["public", "private"] })
     .notNull()
     .default("private"),
@@ -112,9 +110,7 @@ export const document = pgTable(
     kind: varchar("text", { enum: ["text", "code", "image", "sheet"] })
       .notNull()
       .default("text"),
-    userId: uuid("userId")
-      .notNull()
-      .references(() => user.id),
+    userId: varchar("userId", { length: 255 }).notNull(),
   },
   (table) => {
     return {
@@ -135,9 +131,7 @@ export const suggestion = pgTable(
     suggestedText: text("suggestedText").notNull(),
     description: text("description"),
     isResolved: boolean("isResolved").notNull().default(false),
-    userId: uuid("userId")
-      .notNull()
-      .references(() => user.id),
+    userId: varchar("userId", { length: 255 }).notNull(),
     createdAt: timestamp("createdAt").notNull(),
   },
   (table) => ({
@@ -171,9 +165,7 @@ export type Stream = InferSelectModel<typeof stream>;
 
 export const memories = pgTable("Memory", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
-  userId: uuid("userId")
-    .notNull()
-    .references(() => user.id),
+  userId: varchar("userId", { length: 255 }).notNull(),
   content: text("content").notNull(),
   embedding: json("embedding").notNull(), // Storing as JSON array for compatibility
   createdAt: timestamp("createdAt").notNull().defaultNow(),
