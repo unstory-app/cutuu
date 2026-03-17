@@ -76,6 +76,10 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  --radius-4xl: 2.5rem;
+  --radius-5xl: 3rem;
+  --radius-6xl: 3.5rem;
+  --radius-7xl: 4rem;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -153,6 +157,30 @@
 @utility shadow-float {
   shadow-color: hsl(var(--primary) / 0.15);
   box-shadow: 0 20px 50px -12px var(--tw-shadow-color);
+}
+
+@utility shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+@utility shadow-3xl {
+  box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.2);
+}
+
+@utility rounded-4xl {
+  border-radius: var(--radius-4xl);
+}
+
+@utility rounded-5xl {
+  border-radius: var(--radius-5xl);
+}
+
+@utility rounded-6xl {
+  border-radius: var(--radius-6xl);
+}
+
+@utility rounded-7xl {
+  border-radius: var(--radius-7xl);
 }
 
 @layer utilities {
