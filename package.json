@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@ai-sdk/gateway": "^3.0.15",
+    "@ai-sdk/openai": "^3.0.41",
     "@ai-sdk/provider": "^3.0.3",
     "@ai-sdk/react": "3.0.39",
     "@codemirror/lang-javascript": "^6.2.2",
@@ -28,6 +29,7 @@
     "@codemirror/view": "^6.35.3",
     "@icons-pack/react-simple-icons": "^13.7.0",
     "@memobase/memobase": "^0.0.18",
+    "@openrouter/ai-sdk-provider": "^2.3.3",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/api-logs": "^0.200.0",
     "@radix-ui/react-collapsible": "^1.1.12",

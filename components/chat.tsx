@@ -22,7 +22,7 @@ import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import type { Vote } from "@/lib/db/schema";
 import { ChatbotError } from "@/lib/errors";
-import type { Attachment, ChatMessage } from "@/lib/types";
+import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import { fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
 import { Artifact } from "./artifact";
 import { useDataStream } from "./data-stream-provider";
@@ -70,12 +70,8 @@ export function Chat({
 
   const [input, setInput] = useState<string>("");
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
-  const [currentModelId, setCurrentModelId] = useState(initialChatModel);
-  const currentModelIdRef = useRef(currentModelId);
-
-  useEffect(() => {
-    currentModelIdRef.current = currentModelId;
-  }, [currentModelId]);
+  const [currentModelId, _setCurrentModelId] = useState(DEFAULT_CHAT_MODEL);
+  const currentModelIdRef = useRef(DEFAULT_CHAT_MODEL);
 
   const {
     messages,
@@ -215,8 +211,7 @@ export function Chat({
               chatId={id}
               input={input}
               messages={messages}
-              onModelChange={setCurrentModelId}
-              selectedModelId={currentModelId}
+              selectedModelId={DEFAULT_CHAT_MODEL}
               selectedVisibilityType={visibilityType}
               sendMessage={sendMessage}
               setAttachments={setAttachments}

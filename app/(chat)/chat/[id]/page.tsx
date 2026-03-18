@@ -25,10 +25,15 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
     redirect("/");
   }
 
-  const user = await stackServerApp.getUser();
+  let user: any = null;
+  try {
+    user = await stackServerApp.getUser();
+  } catch (e) {
+    console.warn("Error fetching user session:", e);
+  }
 
   if (!user) {
-    redirect("/login");
+    redirect("/landing");
   }
 
   if (chat.visibility === "private") {
@@ -43,31 +48,12 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 
   const uiMessages = convertToUIMessages(messagesFromDb);
 
-  const cookieStore = await cookies();
-  const chatModelFromCookie = cookieStore.get("chat-model");
-
-  if (!chatModelFromCookie) {
-    return (
-      <>
-        <Chat
-          autoResume={true}
-          id={chat.id}
-          initialChatModel={DEFAULT_CHAT_MODEL}
-          initialMessages={uiMessages}
-          initialVisibilityType={chat.visibility}
-          isReadonly={user.id !== chat.userId}
-        />
-        <DataStreamHandler />
-      </>
-    );
-  }
-
   return (
     <>
       <Chat
         autoResume={true}
         id={chat.id}
-        initialChatModel={chatModelFromCookie.value}
+        initialChatModel={DEFAULT_CHAT_MODEL}
         initialMessages={uiMessages}
         initialVisibilityType={chat.visibility}
         isReadonly={user.id !== chat.userId}

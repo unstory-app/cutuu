@@ -55,8 +55,14 @@ export async function POST(request: Request) {
 
   try {
     const json = await request.json();
-    requestBody = postRequestBodySchema.parse(json);
-  } catch (_) {
+    const result = postRequestBodySchema.safeParse(json);
+    if (!result.success) {
+      console.error("Zod Validation Error:", result.error.format());
+      return new ChatbotError("bad_request:api").toResponse();
+    }
+    requestBody = result.data;
+  } catch (error) {
+    console.error("JSON Parse Error:", error);
     return new ChatbotError("bad_request:api").toResponse();
   }
 
@@ -64,7 +70,17 @@ export async function POST(request: Request) {
     const { id, message, messages, selectedChatModel, selectedVisibilityType } =
       requestBody;
 
-    const [botResult, user] = await Promise.all([checkBotId(), stackServerApp.getUser()]);
+    let user: any = null;
+    let botResult: any = { isBot: false };
+    try {
+      [botResult, user] = await Promise.all([
+        checkBotId(),
+        stackServerApp.getUser(),
+      ]);
+    } catch (e) {
+      console.warn("Error fetching user session:", e);
+      return new ChatbotError("unauthorized:chat").toResponse();
+    }
 
     if (botResult.isBot) {
       return new ChatbotError("unauthorized:chat").toResponse();
