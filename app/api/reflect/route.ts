@@ -19,7 +19,10 @@ export async function POST(request: Request) {
       endingBefore: null,
     });
 
-    let allMessages: Array<{ role: string; content: string }> = [];
+    let allMessages: Array<{
+      role: "user" | "assistant";
+      content: string;
+    }> = [];
 
     for (const chat of chats) {
       const messages = await getMessagesByChatId({ id: chat.id });
@@ -37,7 +40,7 @@ export async function POST(request: Request) {
 
           return [
             {
-              role: message.role,
+              role: message.role as "user" | "assistant",
               content,
             },
           ];

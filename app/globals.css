@@ -291,7 +291,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: --alpha(var(--muted-foreground) / 0.5);
+  background: hsl(var(--muted-foreground) / 0.5);
 }
 
 ::-webkit-scrollbar-corner {
@@ -322,4 +322,119 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes drift-slow {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(40px, -28px, 0) scale(1.08);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes drift-reverse {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(-36px, 20px, 0) scale(1.06);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.animate-float-soft {
+  animation: float-soft 6s ease-in-out infinite;
+}
+
+.animate-drift-slow {
+  animation: drift-slow 18s ease-in-out infinite;
+}
+
+.animate-drift-reverse {
+  animation: drift-reverse 20s ease-in-out infinite;
+}
+
+.public-grid {
+  background-image:
+    linear-gradient(to right, rgba(214, 186, 199, 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(214, 186, 199, 0.18) 1px, transparent 1px);
+  background-position: center;
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at center, black 42%, transparent 86%);
+}
+
+.public-panel {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.68));
+  backdrop-filter: blur(22px);
+  border-radius: 2rem;
+  box-shadow: 0 24px 70px rgba(71, 44, 62, 0.08);
+}
+
+.public-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.78);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6e5b67;
+  box-shadow: 0 14px 34px rgba(120, 77, 99, 0.06);
+  backdrop-filter: blur(14px);
+}
+
+.public-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(80px);
+  opacity: 0.75;
+}
+
+.public-orb-peach {
+  left: -8rem;
+  top: 2rem;
+  height: 18rem;
+  width: 18rem;
+  background: rgba(255, 180, 150, 0.45);
+}
+
+.public-orb-rose {
+  right: -4rem;
+  top: 24%;
+  height: 15rem;
+  width: 15rem;
+  background: rgba(235, 170, 193, 0.4);
+}
+
+.public-orb-sky {
+  bottom: -4rem;
+  left: 36%;
+  height: 16rem;
+  width: 16rem;
+  background: rgba(162, 208, 255, 0.38);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import type { DataUIPart } from "ai";
 import { DefaultChatTransport } from "ai";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -23,6 +24,7 @@ import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import type { Vote } from "@/lib/db/schema";
 import { ChatbotError } from "@/lib/errors";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
+import type { Attachment, ChatMessage, CustomUIDataTypes } from "@/lib/types";
 import { fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
 import { Artifact } from "./artifact";
 import { useDataStream } from "./data-stream-provider";
@@ -90,11 +92,16 @@ export function Chat({
       const lastMessage = currentMessages.at(-1);
       const shouldContinue =
         lastMessage?.parts?.some(
-          (part) =>
+          (
+            part: ChatMessage["parts"][number] & {
+              state?: string;
+              approval?: { approved?: boolean };
+            }
+          ) =>
             "state" in part &&
             part.state === "approval-responded" &&
             "approval" in part &&
-            (part.approval as { approved?: boolean })?.approved === true
+            part.approval?.approved === true
         ) ?? false;
       return shouldContinue;
     },
@@ -107,7 +114,7 @@ export function Chat({
           lastMessage?.role !== "user" ||
           request.messages.some((msg) =>
             msg.parts?.some((part) => {
-              const state = (part as { state?: string }).state;
+              const state = "state" in part ? part.state : undefined;
               return (
                 state === "approval-responded" || state === "output-denied"
               );
@@ -128,7 +135,10 @@ export function Chat({
       },
     }),
     onData: (dataPart) => {
-      setDataStream((ds) => (ds ? [...ds, dataPart] : []));
+      setDataStream((ds) => [
+        ...ds,
+        dataPart as DataUIPart<CustomUIDataTypes>,
+      ]);
     },
     onFinish: () => {
       mutate(unstable_serialize(getChatHistoryPaginationKey));
@@ -184,7 +194,16 @@ export function Chat({
 
   return (
     <>
-      <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
+      <div className="overscroll-behavior-contain relative flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+        >
+          <div className="absolute inset-x-0 top-0 h-48 bg-linear-to-b from-[#fff1e9]/90 via-[#fff7f2]/35 to-transparent dark:from-zinc-900/40 dark:via-transparent" />
+          <div className="absolute left-[-5%] top-[14%] h-56 w-56 rounded-full bg-[#ffd7ca]/35 blur-3xl dark:bg-rose-500/10" />
+          <div className="absolute bottom-[18%] right-[-5%] h-64 w-64 rounded-full bg-[#d4e7ff]/30 blur-3xl dark:bg-sky-500/10" />
+        </div>
+
         <ChatHeader
           chatId={id}
           isReadonly={isReadonly}
@@ -204,7 +223,7 @@ export function Chat({
           votes={votes}
         />
 
-        <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-transparent px-4 pb-6 md:px-8 md:pb-8">
+        <div className="sticky bottom-0 z-10 mx-auto flex w-full max-w-5xl gap-2 bg-linear-to-t from-background via-background/95 to-transparent px-4 pb-4 pt-8 backdrop-blur-sm md:px-6 md:pb-6">
           {!isReadonly && (
             <MultimodalInput
               attachments={attachments}

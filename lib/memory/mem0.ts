@@ -84,6 +84,25 @@ async function mem0Fetch<T>(
   return response.json() as Promise<T>;
 }
 
+async function mem0FetchWithFallback<T>(
+  paths: string[],
+  body: Record<string, unknown>
+): Promise<T> {
+  let lastError: unknown;
+
+  for (const path of paths) {
+    try {
+      return await mem0Fetch<T>(path, body);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Mem0 request failed");
+}
+
 function unwrapResults<T>(payload: T[] | Mem0ResultsEnvelope<T>): T[] {
   if (Array.isArray(payload)) {
     return payload;
@@ -136,23 +155,22 @@ export async function addMemories({
     return [];
   }
 
-  const response = await mem0Fetch<Mem0AddEvent[] | Mem0ResultsEnvelope<Mem0AddEvent>>(
-    "/v1/memories/",
-    {
-      user_id: userId,
-      messages: trimmedMessages,
-      metadata: {
-        source: "cutuu",
-        ...metadata,
-      },
-      includes: MEMORY_INCLUDES,
-      custom_instructions: MEMORY_INSTRUCTIONS,
-      enable_graph: true,
-      async_mode: false,
-      output_format: "v1.1",
-      version: "v2",
-    }
-  );
+  const response = await mem0FetchWithFallback<
+    Mem0AddEvent[] | Mem0ResultsEnvelope<Mem0AddEvent>
+  >(["/v1/memories/", "/v1/memories"], {
+    user_id: userId,
+    messages: trimmedMessages,
+    metadata: {
+      source: "cutuu",
+      ...metadata,
+    },
+    includes: MEMORY_INCLUDES,
+    custom_instructions: MEMORY_INSTRUCTIONS,
+    enable_graph: true,
+    async_mode: false,
+    output_format: "v1.1",
+    version: "v2",
+  });
 
   return unwrapResults(response);
 }
@@ -172,7 +190,9 @@ export async function searchMemories({
     return [];
   }
 
-  const response = await mem0Fetch<Mem0Memory[]>("/v2/memories/search", {
+  const response = await mem0FetchWithFallback<
+    Mem0Memory[] | Mem0ResultsEnvelope<Mem0Memory>
+  >(["/v2/memories/search", "/v1/memories/search"], {
     query: trimmedQuery,
     filters: {
       user_id: userId,
@@ -181,7 +201,7 @@ export async function searchMemories({
     version: "v2",
   });
 
-  return response;
+  return unwrapResults(response);
 }
 
 export async function getUserMemories({
@@ -191,7 +211,9 @@ export async function getUserMemories({
   userId: string;
   limit?: number;
 }) {
-  const response = await mem0Fetch<Mem0Memory[]>("/v2/memories", {
+  const response = await mem0FetchWithFallback<
+    Mem0Memory[] | Mem0ResultsEnvelope<Mem0Memory>
+  >(["/v2/memories", "/v1/memories", "/v1/memories/"], {
     filters: {
       user_id: userId,
     },
@@ -200,7 +222,7 @@ export async function getUserMemories({
     output_format: "v1.1",
   });
 
-  return response.sort(
+  return unwrapResults(response).sort(
     (a, b) =>
       new Date(b.updated_at || b.created_at).getTime() -
       new Date(a.updated_at || a.created_at).getTime()

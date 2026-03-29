@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { StackProvider, StackTheme } from "@stackframe/stack";
@@ -9,8 +9,48 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://cutuu.unstory.app"),
-  title: "Cutuu — Your Daily Companion AI",
-  description: "A memory-first AI companion that remembers you across every conversation.",
+  title: {
+    default: "Cutuu | Memory-first companion",
+    template: "%s | Cutuu",
+  },
+  description:
+    "A memory-first companion for daily check-ins, familiar conversations, and softer routines that grow over time.",
+  applicationName: "Cutuu",
+  keywords: [
+    "AI companion",
+    "memory-first assistant",
+    "journaling companion",
+    "daily check-in app",
+    "personal AI friend",
+  ],
+  openGraph: {
+    title: "Cutuu | Memory-first companion",
+    description:
+      "A soft, memory-first companion that keeps names, routines, and personal context across conversations.",
+    url: "https://cutuu.unstory.app/landing",
+    siteName: "Cutuu",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/images/demo-thumbnail.png",
+        width: 1200,
+        height: 630,
+        alt: "Cutuu preview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cutuu | Memory-first companion",
+    description:
+      "A soft, memory-first companion that remembers the little things.",
+    images: ["/images/demo-thumbnail.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export const viewport = {
@@ -27,6 +67,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-geist-mono",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-fraunces",
 });
 
 const LIGHT_THEME_COLOR = "hsl(0 0% 100%)";
@@ -56,7 +102,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      className={`${geist.variable} ${geistMono.variable}`}
+      className={`${geist.variable} ${geistMono.variable} ${fraunces.variable}`}
       lang="en"
       suppressHydrationWarning
     >

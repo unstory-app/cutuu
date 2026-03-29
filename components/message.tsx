@@ -49,46 +49,58 @@ const PurePreviewMessage = ({
   const attachmentsFromMessage = message.parts.filter(
     (part) => part.type === "file"
   );
+  const isUser = message.role === "user";
+  const isAssistant = message.role === "assistant";
+  const hasTextContent = message.parts?.some(
+    (part) => part.type === "text" && part.text?.trim()
+  );
 
   useDataStream();
 
   return (
     <div
       className={cn("group/message fade-in w-full animate-in duration-200", {
-        "is-user": message.role === "user",
-        "is-assistant": message.role === "assistant",
+        "is-user": isUser,
+        "is-assistant": isAssistant,
       })}
       data-role={message.role}
       data-testid={`message-${message.role}`}
     >
       <div
         className={cn("flex w-full items-start gap-2 md:gap-3", {
-          "justify-end": message.role === "user" && mode !== "edit",
-          "justify-start": message.role === "assistant",
+          "justify-end": isUser && mode !== "edit",
+          "justify-start": isAssistant,
         })}
       >
-        {message.role === "assistant" && (
-          <div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
+        {isAssistant && (
+          <div className="-mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-white/80 shadow-[0_14px_30px_rgba(71,44,62,0.08)] dark:border-zinc-800 dark:bg-zinc-900">
             <SparklesIcon size={14} />
           </div>
         )}
 
         <div
           className={cn("flex flex-col", {
-            "gap-2 md:gap-4": message.parts?.some(
-              (p) => p.type === "text" && p.text?.trim()
-            ),
+            "gap-2 md:gap-4": hasTextContent,
             "w-full":
-              (message.role === "assistant" &&
-                (message.parts?.some(
-                  (p) => p.type === "text" && p.text?.trim()
-                ) ||
+              (isAssistant &&
+                (hasTextContent ||
                   message.parts?.some((p) => p.type.startsWith("tool-")))) ||
               mode === "edit",
-            "max-w-[calc(100%-2.5rem)] sm:max-w-[min(fit-content,80%)]":
-              message.role === "user" && mode !== "edit",
+            "max-w-[calc(100%-2.5rem)] sm:max-w-[min(fit-content,78%)]":
+              isUser && mode !== "edit",
           })}
         >
+          {hasTextContent && mode === "view" && (
+            <div
+              className={cn("px-1 text-[11px] font-medium uppercase tracking-[0.2em]", {
+                "text-right text-[#a56b7d] dark:text-rose-300": isUser,
+                "text-[#7d6874] dark:text-zinc-400": isAssistant,
+              })}
+            >
+              {isUser ? "you" : "cutuu"}
+            </div>
+          )}
+
           {attachmentsFromMessage.length > 0 && (
             <div
               className="flex flex-row justify-end gap-2"
@@ -132,12 +144,12 @@ const PurePreviewMessage = ({
                   <div key={key}>
                     <MessageContent
                       className={cn(
-                        "w-fit px-4 py-3 shadow-soft transition-all duration-300",
+                        "w-fit px-4 py-3.5 shadow-soft transition-all duration-300",
                         {
-                          "rounded-4xl rounded-tr-sm bg-primary text-primary-foreground":
-                            message.role === "user",
-                          "bg-muted border border-border/40 text-foreground text-left":
-                            message.role === "assistant",
+                          "rounded-[1.7rem] rounded-br-md border border-[#ffd8cc] bg-linear-to-br from-[#fff0e8] to-[#ffe3d7] text-[#5b4250] shadow-[0_18px_40px_rgba(255,139,114,0.12)] dark:border-rose-500/20 dark:from-rose-500/10 dark:to-rose-400/5 dark:text-rose-50":
+                            isUser,
+                          "max-w-3xl rounded-[1.7rem] rounded-tl-md border border-white/70 bg-white/82 text-left text-foreground shadow-[0_20px_50px_rgba(71,44,62,0.06)] backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/82":
+                            isAssistant,
                         }
                       )}
                       data-testid="message-content"
@@ -373,20 +385,25 @@ export const ThinkingMessage = () => {
       data-testid="message-assistant-loading"
     >
       <div className="flex items-start justify-start gap-3">
-        <div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
+        <div className="-mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-white/80 shadow-[0_14px_30px_rgba(71,44,62,0.08)] dark:border-zinc-800 dark:bg-zinc-900">
           <div className="animate-pulse">
             <SparklesIcon size={14} />
           </div>
         </div>
 
         <div className="flex w-full flex-col gap-2 md:gap-4">
-          <div className="flex items-center gap-1 p-0 text-muted-foreground text-sm">
+          <div className="rounded-[1.5rem] border border-white/70 bg-white/82 px-4 py-3 text-sm text-muted-foreground shadow-[0_20px_50px_rgba(71,44,62,0.06)] backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/82">
+            <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.2em] text-[#7d6874] dark:text-zinc-400">
+              cutuu
+            </div>
+            <div className="flex items-center gap-1">
             <span className="animate-pulse">Thinking</span>
             <span className="inline-flex">
               <span className="animate-bounce [animation-delay:0ms]">.</span>
               <span className="animate-bounce [animation-delay:150ms]">.</span>
               <span className="animate-bounce [animation-delay:300ms]">.</span>
             </span>
+            </div>
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import equal from "fast-deep-equal";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, Paperclip, Sparkles } from "lucide-react";
 import {
   type ChangeEvent,
   type Dispatch,
@@ -302,7 +302,7 @@ function PureMultimodalInput({
       />
 
       <PromptInput
-        className="rounded-[2.5rem] glass shadow-float p-2 pr-4 transition-all duration-300 focus-within:shadow-primary/20 hover:border-primary/30"
+        className="rounded-[2rem] border border-white/75 bg-white/80 p-2.5 shadow-[0_28px_80px_rgba(71,44,62,0.1)] backdrop-blur-xl transition-all duration-300 focus-within:border-[#ffd2c3] focus-within:shadow-[0_32px_90px_rgba(255,139,114,0.14)] dark:border-zinc-800 dark:bg-zinc-900/80"
         onSubmit={(event) => {
           event.preventDefault();
           if (!input.trim() && attachments.length === 0) {
@@ -315,9 +315,23 @@ function PureMultimodalInput({
           }
         }}
       >
+        <div className="flex items-center justify-between gap-3 px-2 pb-2">
+          <div className="inline-flex items-center gap-2 text-xs font-medium text-[#7b6673] dark:text-zinc-400">
+            <span className="flex size-7 items-center justify-center rounded-full bg-[#fff2ea] text-[#ff8b72] dark:bg-rose-500/10 dark:text-rose-300">
+              <Sparkles className="size-3.5" />
+            </span>
+            {messages.length === 0
+              ? "Start with a check-in, a memory, or a small honest thought."
+              : "Keep it natural. Cutuu will keep the thread."}
+          </div>
+          <div className="hidden text-[11px] text-[#8b7683] md:block dark:text-zinc-500">
+            Enter to send, Shift + Enter for a new line
+          </div>
+        </div>
+
         {(attachments.length > 0 || uploadQueue.length > 0) && (
           <div
-            className="flex flex-row items-end gap-2 overflow-x-scroll"
+            className="flex flex-row items-end gap-2 overflow-x-scroll px-2 pb-2"
             data-testid="attachments-preview"
           >
             {attachments.map((attachment) => (
@@ -350,32 +364,36 @@ function PureMultimodalInput({
         )}
         <div className="flex flex-row items-start gap-1 sm:gap-2">
           <PromptInputTextarea
-            className="grow resize-none border-0! border-none! bg-transparent p-2 text-base outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+            className="grow resize-none border-0! border-none! bg-transparent px-2 py-2 text-[15px] leading-7 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-[#9b8691] focus-visible:outline-none dark:placeholder:text-zinc-500 [&::-webkit-scrollbar]:hidden"
             data-testid="multimodal-input"
             disableAutoResize={true}
             maxHeight={200}
             minHeight={44}
             onChange={handleInput}
-            placeholder="Send a message..."
+            placeholder="Message Cutuu..."
             ref={textareaRef}
             rows={1}
             value={input}
           />
         </div>
-        <PromptInputToolbar className="border-top-0! border-t-0! p-0 shadow-none dark:border-0 dark:border-transparent!">
+        <PromptInputToolbar className="border-top-0! border-t-0! px-1 pt-1 shadow-none dark:border-0 dark:border-transparent!">
           <PromptInputTools className="gap-0 sm:gap-0.5">
             <AttachmentsButton
               fileInputRef={fileInputRef}
               selectedModelId={selectedModelId}
               status={status}
             />
+            <div className="hidden items-center gap-2 rounded-full bg-[#fff7f2] px-3 py-1.5 text-[11px] font-medium text-[#8a7381] md:inline-flex dark:bg-zinc-800 dark:text-zinc-400">
+              <Paperclip className="size-3" />
+              Images and files stay attached to this message
+            </div>
           </PromptInputTools>
 
           {status === "submitted" ? (
             <StopButton setMessages={setMessages} stop={stop} />
           ) : (
             <PromptInputSubmit
-              className="size-8 rounded-full bg-primary text-primary-foreground transition-colors duration-200 hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+              className="size-10 rounded-full bg-[#2b1d28] text-primary-foreground shadow-[0_18px_30px_rgba(43,29,40,0.2)] transition-all duration-200 hover:scale-[1.02] hover:bg-[#352432] disabled:bg-muted disabled:text-muted-foreground"
               data-testid="send-button"
               disabled={!input.trim() || uploadQueue.length > 0}
               status={status}
@@ -426,7 +444,7 @@ function PureAttachmentsButton({
 
   return (
     <Button
-      className="aspect-square h-8 rounded-lg p-1 transition-colors hover:bg-accent"
+      className="aspect-square h-9 rounded-2xl border border-transparent p-1 text-[#715d69] transition-colors hover:border-white/70 hover:bg-white/80 dark:text-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-800"
       data-testid="attachments-button"
       disabled={status !== "ready" || isReasoningModel}
       onClick={(event) => {
@@ -453,7 +471,7 @@ function PureStopButton({
 }) {
   return (
     <Button
-      className="size-7 rounded-full bg-foreground p-1 text-background transition-colors duration-200 hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground"
+      className="size-10 rounded-full bg-foreground p-1 text-background transition-colors duration-200 hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground"
       data-testid="stop-button"
       onClick={(event) => {
         event.preventDefault();

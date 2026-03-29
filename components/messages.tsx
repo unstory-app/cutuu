@@ -44,12 +44,12 @@ function PureMessages({
   useDataStream();
 
   return (
-    <div className="relative flex-1 bg-background">
+    <div className="relative flex-1">
       <div
-        className="absolute inset-0 touch-pan-y overflow-y-auto bg-background"
+        className="absolute inset-0 touch-pan-y overflow-y-auto"
         ref={messagesContainerRef}
       >
-        <div className="mx-auto flex min-w-0 max-w-4xl flex-col gap-4 px-2 py-4 md:gap-6 md:px-4">
+        <div className="mx-auto flex min-w-0 max-w-5xl flex-col gap-5 px-3 pb-6 pt-4 md:gap-7 md:px-6 md:pb-8">
           {messages.length === 0 && <Greeting />}
 
           {messages.map((message, index) => (
@@ -91,7 +91,7 @@ function PureMessages({
 
       <button
         aria-label="Scroll to bottom"
-        className={`absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border bg-background p-2 shadow-lg transition-all hover:bg-muted ${
+        className={`absolute bottom-5 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/80 bg-white/90 p-2.5 text-[#6b5a66] shadow-[0_18px_38px_rgba(71,44,62,0.12)] backdrop-blur-md transition-all hover:-translate-x-1/2 hover:-translate-y-0.5 hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-200 ${
           isAtBottom
             ? "pointer-events-none scale-0 opacity-0"
             : "pointer-events-auto scale-100 opacity-100"
