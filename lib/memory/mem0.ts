@@ -16,11 +16,19 @@ type Mem0AddEvent = {
   };
 };
 
+type MemoryMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 type Mem0ResultsEnvelope<T> = {
   results?: T[];
 };
 
-const MEM0_BASE_URL = process.env.MEM0_BASE_URL ?? "https://api.mem0.ai";
+const MEM0_BASE_URL = (
+  process.env.MEM0_BASE_URL ?? "https://api.mem0.ai"
+).replace(/\/+$/, "");
+const REDIRECT_STATUS_CODES = new Set([301, 302, 307, 308]);
 
 const MEMORY_INCLUDES = [
   "Stable profile facts like name, nickname, pronouns, age, birthday, and location",
@@ -63,16 +71,37 @@ function withWorkspaceScope<T extends Record<string, unknown>>(body: T): T {
   };
 }
 
+function canonicalizeMem0Path(path: string) {
+  return path.endsWith("/") ? path : `${path}/`;
+}
+
 async function mem0Fetch<T>(
   path: string,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  redirectCount = 0
 ): Promise<T> {
-  const response = await fetch(`${MEM0_BASE_URL}${path}`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(withWorkspaceScope(body)),
-    cache: "no-store",
-  });
+  const response = await fetch(
+    `${MEM0_BASE_URL}${canonicalizeMem0Path(path)}`,
+    {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(withWorkspaceScope(body)),
+      cache: "no-store",
+      redirect: "manual",
+    }
+  );
+
+  if (REDIRECT_STATUS_CODES.has(response.status) && redirectCount < 2) {
+    const location = response.headers.get("location");
+
+    if (location) {
+      const redirectedPath = location.startsWith("http")
+        ? new URL(location).pathname
+        : location;
+
+      return mem0Fetch<T>(redirectedPath, body, redirectCount + 1);
+    }
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -135,14 +164,158 @@ function formatMemoryLine(memory: Mem0Memory) {
   return `- ${memory.memory}${categories}`;
 }
 
+function cleanFactValue(value: string) {
+  return value
+    .replace(/\s+/g, " ")
+    .replace(/^["'\s]+|["'\s,.!?;:]+$/g, "")
+    .trim()
+    .slice(0, 120);
+}
+
+function hasWordLimit(value: string, maxWords: number) {
+  return value.split(/\s+/).filter(Boolean).length <= maxWords;
+}
+
+function isLikelyName(value: string) {
+  return /^[A-Za-z][A-Za-z' -]*$/.test(value) && hasWordLimit(value, 4);
+}
+
+function isLikelyPreference(value: string) {
+  return (
+    hasWordLimit(value, 6) &&
+    !/\b(and|because|but|if|that|when)\b/i.test(value)
+  );
+}
+
+function isLikelyLocation(value: string) {
+  return /^[A-Za-z0-9'., -]+$/.test(value) && hasWordLimit(value, 6);
+}
+
+function addFact(
+  facts: Set<string>,
+  rawValue: string,
+  formatter: (value: string) => string,
+  validator?: (value: string) => boolean
+) {
+  const value = cleanFactValue(rawValue);
+
+  if (!value) {
+    return;
+  }
+
+  if (validator && !validator(value)) {
+    return;
+  }
+
+  facts.add(formatter(value));
+}
+
+export function extractProfileFacts(messages: MemoryMessage[]) {
+  const facts = new Set<string>();
+
+  for (const message of messages) {
+    if (message.role !== "user") {
+      continue;
+    }
+
+    const content = message.content.trim();
+
+    if (!content) {
+      continue;
+    }
+
+    for (const match of content.matchAll(/\bmy name is ([^\n,.!?]+)/gi)) {
+      addFact(
+        facts,
+        match[1],
+        (value) => `The user's name is ${value}.`,
+        isLikelyName
+      );
+    }
+
+    for (const match of content.matchAll(
+      /\b(?:you can|please) call me ([^\n,.!?]+)/gi
+    )) {
+      addFact(
+        facts,
+        match[1],
+        (value) => `The user prefers to be called ${value}.`,
+        isLikelyName
+      );
+    }
+
+    for (const match of content.matchAll(/\bmy pronouns are ([^\n,.!?]+)/gi)) {
+      addFact(
+        facts,
+        match[1],
+        (value) => `The user's pronouns are ${value}.`,
+        (value) => hasWordLimit(value, 4)
+      );
+    }
+
+    for (const match of content.matchAll(/\bi live in ([^\n.!?]+)/gi)) {
+      addFact(
+        facts,
+        match[1],
+        (value) => `The user lives in ${value}.`,
+        isLikelyLocation
+      );
+    }
+
+    for (const match of content.matchAll(/\bi(?:'m| am) from ([^\n.!?]+)/gi)) {
+      addFact(
+        facts,
+        match[1],
+        (value) => `The user is from ${value}.`,
+        isLikelyLocation
+      );
+    }
+
+    for (const match of content.matchAll(/\bmy birthday is ([^\n,.!?]+)/gi)) {
+      addFact(
+        facts,
+        match[1],
+        (value) => `The user's birthday is ${value}.`,
+        (value) => hasWordLimit(value, 6)
+      );
+    }
+
+    for (const match of content.matchAll(
+      /\bi (?:really )?(?:love|like) ([^\n,.!?]+)/gi
+    )) {
+      addFact(
+        facts,
+        match[1],
+        (value) => `The user likes ${value}.`,
+        isLikelyPreference
+      );
+    }
+
+    for (const match of content.matchAll(
+      /\bi (?:really )?(?:hate|dislike|don't like|do not like) ([^\n,.!?]+)/gi
+    )) {
+      addFact(
+        facts,
+        match[1],
+        (value) => `The user dislikes ${value}.`,
+        isLikelyPreference
+      );
+    }
+  }
+
+  return Array.from(facts);
+}
+
 export async function addMemories({
   userId,
   messages,
   metadata,
+  infer = true,
 }: {
   userId: string;
-  messages: Array<{ role: "user" | "assistant"; content: string }>;
+  messages: MemoryMessage[];
   metadata?: Record<string, unknown>;
+  infer?: boolean;
 }) {
   const trimmedMessages = messages
     .map((message) => ({
@@ -157,16 +330,20 @@ export async function addMemories({
 
   const response = await mem0FetchWithFallback<
     Mem0AddEvent[] | Mem0ResultsEnvelope<Mem0AddEvent>
-  >(["/v1/memories/", "/v1/memories"], {
+  >(["/v1/memories"], {
     user_id: userId,
     messages: trimmedMessages,
     metadata: {
       source: "cutuu",
       ...metadata,
     },
-    includes: MEMORY_INCLUDES,
-    custom_instructions: MEMORY_INSTRUCTIONS,
-    enable_graph: true,
+    infer,
+    ...(infer
+      ? {
+          includes: MEMORY_INCLUDES,
+          custom_instructions: MEMORY_INSTRUCTIONS,
+        }
+      : {}),
     async_mode: false,
     output_format: "v1.1",
     version: "v2",
@@ -192,7 +369,7 @@ export async function searchMemories({
 
   const response = await mem0FetchWithFallback<
     Mem0Memory[] | Mem0ResultsEnvelope<Mem0Memory>
-  >(["/v2/memories/search", "/v1/memories/search"], {
+  >(["/v2/memories/search"], {
     query: trimmedQuery,
     filters: {
       user_id: userId,
@@ -213,7 +390,7 @@ export async function getUserMemories({
 }) {
   const response = await mem0FetchWithFallback<
     Mem0Memory[] | Mem0ResultsEnvelope<Mem0Memory>
-  >(["/v2/memories", "/v1/memories", "/v1/memories/"], {
+  >(["/v2/memories"], {
     filters: {
       user_id: userId,
     },
@@ -270,4 +447,4 @@ export async function buildMemoryPrompt({
   ].join("\n");
 }
 
-export type { Mem0Memory };
+export type { Mem0Memory, MemoryMessage };
