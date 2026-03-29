@@ -2,6 +2,7 @@ import { stackServerApp } from "@/stack/server";
 import { getMessagesByChatId, getChatsByUserId } from "@/lib/db/queries";
 import { extractAndStoreMemories } from "@/lib/memory/extractMemory";
 import { ChatbotError } from "@/lib/errors";
+import { getTextFromParts } from "@/lib/utils";
 
 export async function POST(request: Request) {
   const user = await stackServerApp.getUser();
@@ -24,10 +25,23 @@ export async function POST(request: Request) {
       const messages = await getMessagesByChatId({ id: chat.id });
       allMessages = [
         ...allMessages,
-        ...messages.map((m) => ({
-          role: m.role,
-          content: (m.parts as any)[0].text,
-        })),
+        ...messages.flatMap((message) => {
+          const content = getTextFromParts(message.parts);
+
+          if (
+            (message.role !== "user" && message.role !== "assistant") ||
+            !content
+          ) {
+            return [];
+          }
+
+          return [
+            {
+              role: message.role,
+              content,
+            },
+          ];
+        }),
       ];
     }
 

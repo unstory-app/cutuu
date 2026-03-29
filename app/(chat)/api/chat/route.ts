@@ -34,7 +34,11 @@ import type { DBMessage } from "@/lib/db/schema";
 import { ChatbotError } from "@/lib/errors";
 import { checkIpRateLimit } from "@/lib/ratelimit";
 import type { ChatMessage } from "@/lib/types";
-import { convertToUIMessages, generateUUID } from "@/lib/utils";
+import {
+  convertToUIMessages,
+  generateUUID,
+  getTextFromMessage,
+} from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
@@ -158,15 +162,13 @@ export async function POST(request: Request) {
       });
     }
 
-    // MEMORY INTEGRATION: Fetch relevant memories
-    const relevantMemories = await searchMemories({
-      userId: user.id,
-      query: message?.role === "user" ? (message.parts[0] as any).text : "",
-    });
+    const userMessageText =
+      message?.role === "user" ? getTextFromMessage(message) : "";
 
-    const memorySnippet = relevantMemories.length > 0
-      ? `\n\nRelevant memories about user:\n${relevantMemories.map(m => `* ${m}`).join("\n")}`
-      : "";
+    const memorySnippet = await searchMemories({
+      userId: user.id,
+      query: userMessageText,
+    });
 
     const isReasoningModel =
       selectedChatModel.endsWith("-thinking") ||
@@ -180,7 +182,7 @@ export async function POST(request: Request) {
       execute: async ({ writer: dataStream }) => {
         const result = streamText({
           model: getLanguageModel(selectedChatModel),
-          system: companionPrompt + memorySnippet,
+          system: [companionPrompt, memorySnippet].filter(Boolean).join("\n\n"),
           messages: modelMessages,
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
@@ -195,7 +197,7 @@ export async function POST(request: Request) {
         if (titlePromise) {
           const title = await titlePromise;
           dataStream.write({ type: "data-chat-title", data: title });
-          updateChatTitleById({ chatId: id, title });
+          await updateChatTitleById({ chatId: id, title });
         }
       },
       generateId: generateUUID,
@@ -235,17 +237,45 @@ export async function POST(request: Request) {
             })),
           });
 
-          // MEMORY INTEGRATION: Extract and store memories from the new exchange
-          after(async () => {
-            const lastMessages = [
-              ...(message ? [{ role: "user", content: (message.parts[0] as any).text }] : []),
-              ...finishedMessages.map(m => ({ role: m.role, content: (m.parts[0] as any).text }))
-            ];
-            await extractAndStoreMemories({
-              userId: user.id,
-              messages: lastMessages,
-            });
-          });
+          const lastMessages = [
+            ...(message
+              ? [
+                  {
+                    role: "user" as const,
+                    content: getTextFromMessage(message),
+                  },
+                ]
+              : []),
+            ...finishedMessages.flatMap((currentMessage) => {
+              const content = getTextFromMessage(currentMessage);
+
+              if (
+                (currentMessage.role !== "user" &&
+                  currentMessage.role !== "assistant") ||
+                !content
+              ) {
+                return [];
+              }
+
+              return [
+                {
+                  role: currentMessage.role,
+                  content,
+                },
+              ];
+            }),
+          ];
+
+          if (lastMessages.length > 0) {
+            try {
+              await extractAndStoreMemories({
+                userId: user.id,
+                messages: lastMessages,
+              });
+            } catch (error) {
+              console.warn("Failed to persist memories for chat", id, error);
+            }
+          }
         }
       },
       onError: (error) => {

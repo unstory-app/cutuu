@@ -108,9 +108,31 @@ export function convertToUIMessages(messages: DBMessage[]): ChatMessage[] {
   }));
 }
 
+export function getTextFromParts(parts: unknown): string {
+  if (!Array.isArray(parts)) {
+    return '';
+  }
+
+  return parts
+    .flatMap((part) => {
+      if (
+        part &&
+        typeof part === 'object' &&
+        'type' in part &&
+        part.type === 'text' &&
+        'text' in part &&
+        typeof part.text === 'string'
+      ) {
+        return [part.text.trim()];
+      }
+
+      return [];
+    })
+    .filter(Boolean)
+    .join('\n')
+    .trim();
+}
+
 export function getTextFromMessage(message: ChatMessage | UIMessage): string {
-  return message.parts
-    .filter((part) => part.type === 'text')
-    .map((part) => (part as { type: 'text'; text: string}).text)
-    .join('');
+  return getTextFromParts(message.parts);
 }

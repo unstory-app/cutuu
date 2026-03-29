@@ -54,7 +54,10 @@ const PurePreviewMessage = ({
 
   return (
     <div
-      className="group/message fade-in w-full animate-in duration-200"
+      className={cn("group/message fade-in w-full animate-in duration-200", {
+        "is-user": message.role === "user",
+        "is-assistant": message.role === "assistant",
+      })}
       data-role={message.role}
       data-testid={`message-${message.role}`}
     >
@@ -128,12 +131,15 @@ const PurePreviewMessage = ({
                 return (
                   <div key={key}>
                     <MessageContent
-                      className={cn("w-fit px-4 py-3 shadow-soft transition-all duration-300", {
-                        "rounded-4xl rounded-tr-sm bg-primary text-primary-foreground":
-                          message.role === "user",
-                        "bg-transparent px-0 py-0 text-left":
-                          message.role === "assistant",
-                      })}
+                      className={cn(
+                        "w-fit px-4 py-3 shadow-soft transition-all duration-300",
+                        {
+                          "rounded-4xl rounded-tr-sm bg-primary text-primary-foreground":
+                            message.role === "user",
+                          "bg-muted border border-border/40 text-foreground text-left":
+                            message.role === "assistant",
+                        }
+                      )}
                       data-testid="message-content"
                     >
                       <Response>{sanitizeText(part.text)}</Response>

@@ -1,4 +1,4 @@
-import { memobaseClient } from "./memobase";
+import { buildMemoryPrompt } from "./mem0";
 
 export async function searchMemories({
   userId,
@@ -6,23 +6,14 @@ export async function searchMemories({
 }: {
   userId: string;
   query: string;
-  limit?: number;
 }) {
-  if (!query) return [];
-
-  const user = await memobaseClient.getUser(userId);
-  const context = await user.context(
-    500, // maxTokenSize
-    undefined, // maxSubtopicSize
-    undefined, // preferTopics
-    undefined, // onlyTopics
-    undefined, // topicLimits
-    undefined, // profileEventRatio
-    undefined, // requireEventSummary
-    undefined, // chats
-    undefined, // eventSimilarityThreshold
-    "Related past memories about the user:" // customizeContextPrompt
-  );
-
-  return context ? [context] : [];
+  try {
+    return await buildMemoryPrompt({
+      userId,
+      query,
+    });
+  } catch (error) {
+    console.warn("Error searching memories for user:", userId, error);
+    return "";
+  }
 }

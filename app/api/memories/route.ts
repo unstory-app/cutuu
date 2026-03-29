@@ -1,8 +1,6 @@
 import { stackServerApp } from "@/stack/server";
-import { db } from "@/lib/db/queries";
-import { memories } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
 import { ChatbotError } from "@/lib/errors";
+import { getUserMemories } from "@/lib/memory/mem0";
 
 export async function GET() {
   const user = await stackServerApp.getUser();
@@ -12,13 +10,19 @@ export async function GET() {
   }
 
   try {
-    const userMemories = await db
-      .select()
-      .from(memories)
-      .where(eq(memories.userId, user.id))
-      .orderBy(desc(memories.createdAt));
+    const userMemories = await getUserMemories({
+      userId: user.id,
+      limit: 100,
+    });
 
-    return Response.json(userMemories);
+    return Response.json(
+      userMemories.map((memory) => ({
+        id: memory.id,
+        content: memory.memory,
+        createdAt: memory.updated_at || memory.created_at,
+        categories: memory.categories ?? [],
+      }))
+    );
   } catch (error) {
     console.error("Failed to fetch memories:", error);
     return new ChatbotError("offline:api").toResponse();

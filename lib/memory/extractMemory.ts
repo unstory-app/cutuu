@@ -1,22 +1,17 @@
-import { memobaseClient } from "./memobase";
+import { addMemories } from "./mem0";
 
 export async function extractAndStoreMemories({
   userId,
   messages,
 }: {
   userId: string;
-  messages: Array<{ role: string; content: string }>;
+  messages: Array<{ role: "user" | "assistant"; content: string }>;
 }) {
-  // We use memobase's high-level insert which handles extraction and storage automatically
-  const blob = {
-    type: "chat" as const,
-    messages: messages.map((m) => ({
-      role: m.role as "user" | "assistant",
-      content: m.content,
-    })),
-  };
-
-  const user = await memobaseClient.getUser(userId);
-  await user.insert(blob);
-  await user.flush();
+  await addMemories({
+    userId,
+    messages,
+    metadata: {
+      kind: "conversation",
+    },
+  });
 }

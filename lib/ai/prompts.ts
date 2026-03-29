@@ -123,17 +123,21 @@ export const updateDocumentPrompt = (
 ${currentContent}`;
 };
 
-export const titlePrompt = `Generate a short chat title (2-5 words) summarizing the user's message.
+export const titlePrompt = `Generate a creative, short chat title (2-5 words) that accurately summarizes the main topic of the conversation. 
 
-Output ONLY the title text. No prefixes, no formatting.
+Avoid generic titles like "New Conversation" or "Chat Help" unless the input is extremely brief (e.g., just "hi").
+
+Output ONLY the title text. No prefixes, no formatting (no quotes, no hashtags).
 
 Examples:
-- "what's the weather in nyc" → Weather in NYC
-- "help me write an essay about space" → Space Essay Help
-- "hi" → New Conversation
-- "debug my python code" → Python Debugging
+- "what's the weather in nyc" → NYC Weather Today
+- "help me write an essay about space" → Space Exploration Essay
+- "hi" → New Chat
+- "debug my python code" → Python Debugging Fix
+- "tell me about yourself" → About Cutuu AI
+- "what are some healthy recipes?" → Healthy Recipe Ideas
 
-Bad outputs (never do this):
-- "# Space Essay" (no hashtags)
-- "Title: Weather" (no prefixes)
-- ""NYC Weather"" (no quotes)`;
+Bad outputs:
+- "# Space Essay"
+- "Title: Weather"
+- "NYC Weather"`;

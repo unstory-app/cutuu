@@ -4,11 +4,8 @@ import { isTestEnvironment } from "../constants";
 import { DEFAULT_CHAT_MODEL } from "./models";
 
 const cloudflare = createOpenAI({
-  apiKey: "", // Workers AI through Gateway Compat usually doesn't need an OpenAI key if using Gateway token
+  apiKey: process.env.CF_AIG_TOKEN,
   baseURL: process.env.CF_AIG_ENDPOINT,
-  headers: {
-    "cf-aig-authorization": `Bearer ${process.env.CF_AIG_TOKEN}`,
-  },
 });
 
 export const myProvider = isTestEnvironment

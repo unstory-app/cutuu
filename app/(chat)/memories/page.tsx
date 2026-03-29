@@ -9,6 +9,7 @@ interface Memory {
   id: string;
   content: string;
   createdAt: string;
+  categories?: string[];
 }
 
 export default function MemoryTimelinePage() {
